@@ -9,10 +9,12 @@ import json
 from shapely.geometry import shape, MultiPolygon, Point
 import datetime
 import multiprocessing as mp
+import logging
+logging.basicConfig()
 
 logger = getLogger(__name__)
 
-SHP_PATH = 'esri_conference_building/Join_Features_to_SDCC_Buildings___Buildings.shp'
+SHP_PATH = 'erase_demo_room/erase_demo_room.shp'
 ENDPOINT = 'http://startupsges.bd.esri.com:6180/geoevent/rest/receiver/rest-json-in_wheels'
 
 DEVICES_COUNT = 100  # number of simulated assets
@@ -37,6 +39,7 @@ class Event(object):
         self.__heading = 0
         self._heading((0., 360.))
         self.__step = 0.8
+        self.__n_step = random.randrange(0, 59)
 
     def info(self):
         logger.info('Heading: %s' % self.__heading)
@@ -49,6 +52,7 @@ class Event(object):
         """
         try:
             while True:
+                self.__n_step += 1
                 self._move()
                 feed = self._post()
                 yield feed
@@ -59,11 +63,19 @@ class Event(object):
         except KeyboardInterrupt:
             raise Exception('aborted')
 
+    def get_status(self):
+        if self.__n_step == 60:
+            self.__n_step = 0
+            return 1
+        return 0
+
     def _post(self):
         """
         Posting request to server
         :return: 
         """
+
+
         feed = dict(
             geometry=dict(
                 x=self.pos[0],
@@ -76,6 +88,7 @@ class Event(object):
             objectDesc=self.request_feed['objectDescription'],
             lat=self.pos[0],
             lon=self.pos[1],
+            status=self.request_feed['status'][self.get_status()],
             accuracy=random.randrange(1, 3),
             timerecordstamp=datetime.datetime.utcnow().isoformat()
         )
@@ -83,6 +96,7 @@ class Event(object):
         jso = json.dumps(feed)
         requests.post(self.endpoint, jso,
                       headers={'content-type': 'application/json'})
+
         return feed
 
     def _move(self):
@@ -134,13 +148,18 @@ def generate_assets(number, floor=1):
     :param floor: 
     :return: 
     """
-    percent2num = lambda x: max(1., number / 100. * x)
+    percent2num = lambda x: max(1., float(number) / 100. * x)
+
     objects = dict(security=percent2num(10.),
                    visitor=percent2num(50.),
                    wheelchair=percent2num(10.),
                    catering_cart=percent2num(10.))
 
     device = ['android', 'ios']
+    status = dict(security=['ok','emergency'],
+                  visitor=['walk','walk'],
+                  wheelchair=['free','occupied'],
+                  catering_cart=['ok','refill'])
 
     out = []
     for obj, num in objects.items():
@@ -149,6 +168,7 @@ def generate_assets(number, floor=1):
                 floor=str(floor),
                 device=device[random.randint(0, 1)],
                 objectDescription=obj,
+                status=status[obj],
                 wkt=WKTID)
             )
     return out

@@ -11,13 +11,15 @@ ZRANGE = [1, 3]
 IDRANGE = [1, 5]
 DATERANGE = [0, 43200] #12 hours
 
-GESERVICE = "http://startupsges.bd.esri.com:6180/geoevent/rest/receiver/indoors-features-in-rest"
+GESERVICE = "http://startupsges.bd.esri.com:6180/geoevent/rest/receiver/rest-features-in-workertracker"
+
 
 def random_date():
     """Generate a random within the specified range from now"""
     ctime = datetime.utcnow()
     d_s = randint(DATERANGE[0], DATERANGE[1])
     return ctime + timedelta(seconds=d_s)
+
 
 def get_feature():
     """get the feature to post to geoevent"""
@@ -46,12 +48,12 @@ def get_feature():
     }
     return feature
 
+
 def post_feature(feature):
     """post the feature to geoevent"""
     req = post(GESERVICE, json=feature)
     if req.status_code < 200 or req.status_code > 299:
         print "Error posting `{0}`".format(feature)
-        print req.text
         return False
     return True
 
