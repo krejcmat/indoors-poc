@@ -14,7 +14,7 @@ logging.basicConfig()
 
 logger = getLogger(__name__)
 
-SHP_PATH = 'erase_demo_room/erase_demo_room.shp'
+SHP_PATH = 'Dissolve_Erase_Join_Features_to_SDCC_RoomUnitsLevel1_with_disolved_rm_manual/Dissolve_Erase_Join_Features_to_SDCC_RoomUnitsLevel1_with_disolved_rm_manual.shp'
 ENDPOINT = 'http://startupsges.bd.esri.com:6180/geoevent/rest/receiver/rest-json-in_wheels'
 
 DEVICES_COUNT = 100  # number of simulated assets
