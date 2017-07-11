@@ -11,7 +11,7 @@ plt.interactive(False)
 matplotlib.get_backend()
 import uuid
 import json
-from shapely.geometry import shape, MultiPolygon, Point
+from shapely.geometry import shape, MultiPolygon, Point, Polygon
 import datetime
 import multiprocessing as mp
 import logging
@@ -20,19 +20,12 @@ logging.basicConfig()
 
 logger = getLogger(__name__)
 
-
-# ESRI
-SHP_PATH = ('Dissolve_Erase_Join_Features_to_SDCC_RoomUnitsLevel1'
-            '_with_disolved_rm_manual/Dissolve_Erase_'
-            'Join_Features_to_SDCC_RoomUnitsLevel1_with_disolved_rm_manual'
-            '.shp')
-
-#SHP_PATH=("/home/matt/Documents/esri/layer0_0/layer0_0.shp")
+SHP_PATH=("/home/matt/Documents/esri/taxi/layer0_0.shp")
 
 ENDPOINT = 'http://startupsges.bd.esri.com:6180/geoevent/rest/receiver/rest-json-in_wheels'
 OFFLINE = False
 
-DEVICES_COUNT = 100  # number of simulated assets
+DEVICES_COUNT = 50  # number of simulated assets
 WKTID = 3857  # wktid of shapefile
 
 
@@ -167,18 +160,12 @@ def generate_assets(number, floor=1):
     """
     percent2num = lambda x: max(1., float(number) / 100. * x)
 
-    objects = dict(security=percent2num(20.),
-                   visitor=percent2num(50.),
-                   wheelchair=percent2num(10.),
-                   catering_cart=percent2num(10.),
-                   officer=percent2num(10.))
+    objects = dict(taxi=percent2num(20.),
+                   visitor_taxi=percent2num(20.))
 
     device = ['android', 'ios']
-    status = dict(security=['ok', 'emergency'],
-                  visitor=['walk', 'walk'],
-                  wheelchair=['free', 'occupied'],
-                  catering_cart=['ok', 'refill'],
-                  officer=['ok','traffic'])
+    status = dict(taxi=['free', 'occupied'],
+                  visitor_taxi=['ok', 'free'])
 
     out = []
     for obj, num in objects.items():
@@ -199,7 +186,7 @@ def simulate((data, position, polygon)):
         drawer = PltAnimator(polygon=polygon)
     try:
         for feed in evnt.walk():
-            #logger.info(feed)
+            logger.info(feed)
             if OFFLINE:
                 drawer.set_point(feed['lat'], feed['lon'])
                 plt.savefig('/tmp/%s.png' % feed['objectId'])
